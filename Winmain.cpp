@@ -1,7 +1,6 @@
 #include <windows.h>
 #include <gdiplus.h>
-#include <list>
-#include "Card.h"
+#include "GameLogic.h"
 
 #pragma comment(lib, "Gdiplus.lib")
 
@@ -12,7 +11,8 @@ const wchar_t gClassName[] = L"SolitaireWindowClass";
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 
 // Test
-std::list<solitaire::Card> myDeck;
+// std::list<solitaire::Card> myDeck;
+solitaire::GameLogic gLogic;
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpcmdLine, _In_ int nShowcmd)
 {
@@ -20,10 +20,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	ULONG_PTR token;
 	GdiplusStartup(&token, &gsi, nullptr);
 
-	// Test
-	myDeck.push_back(solitaire::Card(solitaire::Type::Bear, 0, 0));
-	myDeck.push_back(solitaire::Card(solitaire::Type::Dragon, 150, 0));
-	myDeck.push_back(solitaire::Card(solitaire::Type::Wolf, 300, 0));
+	
 
 
 	WNDCLASSEX wc;
@@ -52,6 +49,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		return 0;
 	}
 
+	gLogic.Init(hwnd);
+
 	ShowWindow(hwnd, nShowcmd);
 	UpdateWindow(hwnd);
 
@@ -62,7 +61,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		DispatchMessage(&msg);
 	}
 
-	myDeck.clear();
+    //myDeck.clear();
+	gLogic.Release();
 
 	GdiplusShutdown(token);
 	return static_cast<int>(msg.wParam);
@@ -73,16 +73,17 @@ void OnPaint(HWND hwnd)
 	PAINTSTRUCT ps;
 	HDC hdc = BeginPaint(hwnd, &ps);
 
-	Graphics graphicks(hdc);
+	Graphics graphics(hdc);
 
-	// Test
-	for (auto& card : myDeck)
-	{
-		card.Flip(true);
+	//// Test
+	//for (auto& card : myDeck)
+	//{
+	//	card.Flip(true);
 
-		card.Draw(graphicks);
-	}
+	//	card.Draw(graphicks);
+	//}
 
+	gLogic.Draw(graphics);
 
 	EndPaint(hwnd, &ps);
 }
@@ -91,6 +92,11 @@ LRESULT WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 	switch(message)
 	{
+		case WM_LBUTTONUP:
+		{
+			gLogic.OnClick(LOWORD(lparam), HIWORD(lparam));
+		}
+		break;
 		case WM_PAINT:
 		{
 			OnPaint(hwnd);
